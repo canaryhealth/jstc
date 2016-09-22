@@ -38,6 +38,20 @@ pre-compile JavaScript templates for faster client-side rendering:
 Usage
 =====
 
+The typical usage is to have something similar to the following in
+your HTML generation template (here, using `Mako`_ syntax):
+
+.. code:: mako
+
+  <%! import jstc %>
+  <div id="Templates" style="display:none">
+    ${jstc.render_assets('myapp:static/scripts/**.hbs', inline=True, precompile=False)|n}
+  </div>
+
+
+Example
+=======
+
 Given that the following files exist in the Python package `myapp`:
 
 File ``static/templates/common/hello.hbs``::
@@ -45,7 +59,7 @@ File ``static/templates/common/hello.hbs``::
   Hello, {{name}}!
 
 
-File ``static/templates/common/inputs.hbs``::
+File ``static/templates/common/inputs.hbs`` (with multiple templates)::
 
   ##! text
 
@@ -71,21 +85,17 @@ Outputs the HTML (whitespace and newlines added for clarity):
 
 .. code:: html
 
-  <div id="Templates" style="display:none;height:0;opacity:0;visibility:hidden;width:0;">
+  <script type="text/x-handlebars" data-template-name="common/hello">
+    Hello, {{name}}!
+  </script>
 
-    <script type="text/x-handlebars" data-name="common/hello">
-      Hello, {{name}}!
-    </script>
+  <script type="text/x-handlebars" data-template-name="common/inputs/text">
+    <input type="text" name="{{name}}" value="{{value}}"/>
+  </script>
 
-    <script type="text/x-handlebars" data-name="common/inputs/text">
-      <input type="text" name="{{name}}" value="{{value}}"/>
-    </script>
-
-    <script type="text/x-handlebars" data-name="common/inputs/checkbox">
-      <input type="checkbox" name="{{name}}" value="1" {{#if value}}checked="checked"{{/if}}/>
-    </script>
-
-  </div>
+  <script type="text/x-handlebars" data-template-name="common/inputs/checkbox">
+    <input type="checkbox" name="{{name}}" value="1" {{#if value}}checked="checked"{{/if}}/>
+  </script>
 
 
 Some Assumptions
@@ -94,12 +104,9 @@ Some Assumptions
 The `jstc` package makes the following assumptions that cannot be
 easily changed:
 
-* Template names use a ``/`` hierarchical delimiter, e.g.
-  ``components/widgets/textform`` would be a typical template name.
-
-* Templates are named by their containing filenames with any extension
-  removed, e.g. the template in ``"path/to/foo.hbs"`` will be named
-  ``"path/to/foo"``.
+* Template names use the forward slash ("/") hierarchical delimiter,
+  e.g. ``components/widgets/textform`` would be a typical template
+  name.
 
 
 Adding Template Formats
@@ -149,3 +156,4 @@ look at the `handlebars implementation
 
 .. _handlebars: http://handlebarsjs.com/
 .. _mustache: http://mustache.github.io/
+.. _Mako: http://www.makotemplates.org/
