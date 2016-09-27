@@ -109,6 +109,7 @@ class Compiler(object):
   ROOT_AUTO             = 'auto'
 
   TYPE_HTMLFRAG         = 'text/html-fragment'
+  TYPE_SCRIPT           = 'text/javascript'
   TYPE_JS               = 'application/javascript'
   TYPE_JSFRAG           = 'application/javascript-fragment'
 
@@ -257,6 +258,7 @@ class Compiler(object):
                     name_transform     = None,
                     template_transform = None,
                     template_filter    = None,
+                    script_wrapper     = None,
     ):
     '''
     Compiles and prepares the templates in `assets` for delivery to
@@ -351,6 +353,19 @@ class Compiler(object):
 
       Note that this callback is called after `template_transform`.
 
+    script_wrapper : callback, default: null
+
+      Specifies a callback that is used to wrap a pre-compiled
+      template, expressed as a JavaScript code fragment, into an HTML
+      fragment. The callback is called with one argument, the raw
+      JavaScript code fragment. The default simply generates a
+      JavaScript "script" element, e.g.:
+
+      .. code:: html
+
+        <script type="text/javascript">
+          {JAVASCRIPT_CODE_FRAGMENT}
+        </script>
     '''
     assets = morph.tolist(assets)
     roots  = morph.tolist(roots or self.ROOT_AUTO)
@@ -383,11 +398,16 @@ class Compiler(object):
       template_filter = re.compile(template_filter)
       template_filter = lambda text, attrs, *args, **kw: bool(template_filter.match(attrs.get('name')))
 
+    # script_wrapper = callback | null
+    if script_wrapper is None:
+      script_wrapper = self.script_wrap
+
     hooks = aadict(
       asset_filter       = asset_filter,
       name_transform     = name_transform,
       template_transform = template_transform,
       template_filter    = template_filter,
+      script_wrapper     = script_wrapper,
     )
 
     res = dict()
@@ -403,7 +423,7 @@ class Compiler(object):
           raise SyntaxError(
             'could not determine template type for %r (in %r)'
             % (attrs.name, spec))
-        contentType, content = self._compile(text, attrs)
+        contentType, content = self._compile(text, aadict(attrs, partial=True))
         if attrs.type not in res:
           res[attrs.type] = dict()
         if attrs.name in res[attrs.type]:
@@ -436,7 +456,6 @@ class Compiler(object):
         res[attrs.type][attrs.name] = (contentType, content, attrs)
 
     ret = ''
-
     for mimetype in sorted(res.keys()):
       templates = res[mimetype]
       types = dict()
@@ -451,14 +470,13 @@ class Compiler(object):
           ret += ''.join(el[1] for el in parts)
           continue
         if contentType == self.TYPE_JS:
-          content = ''.join(parts)
+          content = ''.join(part[1] for part in parts)
         elif contentType == self.TYPE_JSFRAG:
           contentType, content = self._assemble(mimetype, parts)
         else:
           raise TypeError(
             'unexpected compiled template content-type %r' % (contentType,))
-        ret += '<script type="text/javascript">' + self.script_escape(content) + '</script>'
-
+        ret += hooks.script_wrapper(content)
     return ret
 
   #----------------------------------------------------------------------------
@@ -676,6 +694,15 @@ class Compiler(object):
       return self._htmlwrap(text, attrs)
 
   #----------------------------------------------------------------------------
+  def _assemble(self, mimetype, parts):
+    precomp = self.precompilers.get(mimetype)
+    if not precomp or precomp.assemble is api.PrecompilerUnavailable:
+      raise ValueError(
+        '%r template engine not registered or does not support `assemble`',
+        mimetype)
+    return precomp.assemble(parts)
+
+  #----------------------------------------------------------------------------
   def _htmlwrap(self, text, attrs):
     pfx = self.attrprefix or ''
     curattrs = dict()
@@ -685,16 +712,23 @@ class Compiler(object):
     for key in [k.strip() for k in attrs.get('pass-through', '').split(',')]:
       if key and key in attrs:
         curattrs[key] = attrs.get(key)
+    return (
+      self.TYPE_HTMLFRAG,
+      self.script_wrap(text, type=attrs.type, attrs=curattrs),
+    )
+
+  #----------------------------------------------------------------------------
+  def script_wrap(self, script, type=None, attrs=None):
     attrtext = ' '.join(
       '{key}="{value}"'.format(
-        key=key, value=cgi.escape(curattrs[key], quote=True))
-      for key in sorted(curattrs.keys())
+        key=key, value=cgi.escape(attrs[key], quote=True))
+      for key in sorted((attrs or {}).keys())
     )
-    return (self.TYPE_HTMLFRAG, self.scriptfmt.format(
-      type       = attrs.type,
+    return self.scriptfmt.format(
+      type       = type or self.TYPE_SCRIPT,
       attributes = attrtext,
-      script     = self.script_escape(text),
-    ))
+      script     = self.script_escape(script),
+    )
 
   #----------------------------------------------------------------------------
   def script_escape(self, text):
