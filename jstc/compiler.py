@@ -250,7 +250,9 @@ class Compiler(object):
     self.overrides = aadict(self.default_overrides).update(overrides or {})
 
   #----------------------------------------------------------------------------
-  def render_assets(self, assets, roots=None, inline=None, precompile=None,
+  def render_assets(self, assets, roots=None,
+                    force_inline       = None,
+                    force_precompile   = None,
                     asset_filter       = None,
                     name_transform     = None,
                     template_transform = None,
@@ -282,12 +284,12 @@ class Compiler(object):
       the root prefix is removed from the asset name to create the
       template name.
 
-    inline : bool, default: null
+    force_inline : bool, default: null
 
       If specified and not null, overrides all templates' ``inline``
       attribute.
 
-    precompile : bool, default: null
+    force_precompile : bool, default: null
 
       If specified and not null, overrides all templates' ``precompile``
       attribute.
@@ -354,10 +356,10 @@ class Compiler(object):
     roots  = morph.tolist(roots or self.ROOT_AUTO)
     roots  = roots + ( [roots[-1]] * ( len(assets) - len(roots) ) )
     overrides = aadict(self.overrides)
-    if inline is not None:
-      overrides.inline = inline
-    if precompile is not None:
-      overrides.precompile = precompile
+    if force_inline is not None:
+      overrides.inline = force_inline
+    if force_precompile is not None:
+      overrides.precompile = force_precompile
 
     # asset_filter = regex | callback | null
     if asset_filter is None:
@@ -572,6 +574,11 @@ class Compiler(object):
         template-specific equivalent exists, if any) instead of being
         delivered as-is (i.e. "raw").
 
+        NOTE: precompiled isn't *always* better and/or faster... for
+        some templating languages (such as Handlebars), the
+        pre-compiled template can actually be a *much* larger payload
+        (in some cases 4x!) -- your mileage may vary!
+
       trim : bool, default: true
 
         Specifies whether or not the template content should be
@@ -583,6 +590,11 @@ class Compiler(object):
         an inlined template. Typically, inlined templates are inserted
         directly into the base HTML page, and non-inlined templates
         are loaded asynchronously.
+
+        NOTE: this attribute is NOT used by the `jstc` package...
+        this is an attribute that is intended to be used by callers to
+        filter templates in `template_filter` and/or specially process
+        the resulting templates.
 
       partial : bool, default: false
 
