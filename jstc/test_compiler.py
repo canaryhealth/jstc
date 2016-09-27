@@ -16,6 +16,8 @@ import fso
 #------------------------------------------------------------------------------
 class TestCompiler(unittest.TestCase):
 
+  maxDiff = None
+
   #----------------------------------------------------------------------------
   def test_fragments(self):
     import jstc.compiler
@@ -232,6 +234,31 @@ class TestCompiler(unittest.TestCase):
 ''')
 
   #----------------------------------------------------------------------------
+  def test_precompile(self):
+    import jstc
+    with fso.push() as overlay:
+      self.writecontent({
+        'test/hello.hbs': 'hello, world!',
+        'test/hello/name.hbs': 'hello, {{name}}!',
+      })
+      compiled = jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=True)
+      if 'text/x-handlebars' in compiled:
+        raise unittest.SkipTest(
+          'handlebars executable not available (use "npm install handlebars")')
+      self.assertMultiLineEqual(
+        compiled,
+        '''\
+<script type="text/javascript" >(function(){var t=Handlebars.template,ts=Handlebars.templates=Handlebars.templates||{};ts["hello"]=t({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "hello, world!";
+},"useData":true});ts["hello/name"]=t({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    var helper;
+
+  return "hello, "
+    + container.escapeExpression(((helper = (helper = helpers.name || (depth0 != null ? depth0.name : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : {},{"name":"name","hash":{},"data":data}) : helper)))
+    + "!";
+},"useData":true});})();</script>''')
+
+  #----------------------------------------------------------------------------
   def test_asset_filter(self):
     import jstc
     with fso.push() as overlay:
@@ -240,20 +267,20 @@ class TestCompiler(unittest.TestCase):
         'test/goodbye.hbs': 'so long!',
       })
       self.assertEqual(
-        jstc.render_assets('jstc:test/**.hbs', inline=True, precompile=False),
+        jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=False),
         '''\
 <script type="text/x-handlebars" data-template-name="goodbye">so long!</script>\
 <script type="text/x-handlebars" data-template-name="hello">hello!</script>\
 ''')
       self.assertEqual(
         jstc.render_assets(
-          'jstc:test/**.hbs', inline=True, precompile=False,
+          'jstc:test/**.hbs', force_inline=True, force_precompile=False,
           asset_filter=lambda name: name == 'test/hello.hbs'),
         '''\
 <script type="text/x-handlebars" data-template-name="hello">hello!</script>\
 ''')
       self.assertEqual(
-        jstc.render_assets('jstc:test/**.hbs', inline=True, precompile=False,
+        jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=False,
           asset_filter=lambda name: name != 'test/hello.hbs'),
         '''\
 <script type="text/x-handlebars" data-template-name="goodbye">so long!</script>\
@@ -270,7 +297,7 @@ class TestCompiler(unittest.TestCase):
       def mynt(name, root):
         return (name[2:].replace('d', 'd-').split('.')[0], 'text/x-mustache')
       self.assertEqual(
-        jstc.render_assets('jstc:test/**.hbs', inline=True, precompile=False,
+        jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=False,
           name_transform=mynt),
         '''\
 <script type="text/x-mustache" data-template-name="st/good-bye">so long!</script>\
@@ -293,7 +320,7 @@ class TestCompiler(unittest.TestCase):
           attrs.type = 'template/jst'
         return (text, attrs)
       self.assertEqual(
-        jstc.render_assets('jstc:test/**.hbs', inline=True, precompile=False,
+        jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=False,
           template_transform=mytt),
         '''\
 <script type="template/jst" data-template-name="goodbye">so long!</script>\
@@ -314,20 +341,47 @@ class TestCompiler(unittest.TestCase):
 '''
       })
       self.assertEqual(
-        jstc.render_assets('jstc:test/**.hbs', inline=True, precompile=False),
+        jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=False),
         '''\
 <script type="text/x-handlebars" data-template-name="goodbye">so long!</script>\
 <script type="text/x-handlebars" data-template-name="goodbye/friend">ciao!</script>\
 <script type="text/x-handlebars" data-template-name="hello">hello!</script>\
 ''')
       self.assertEqual(
-        jstc.render_assets('jstc:test/**.hbs', inline=True, precompile=False,
+        jstc.render_assets('jstc:test/**.hbs', force_inline=True, force_precompile=False,
           template_filter=lambda text, attrs: 'ciao' not in text),
         '''\
 <script type="text/x-handlebars" data-template-name="goodbye">so long!</script>\
 <script type="text/x-handlebars" data-template-name="hello">hello!</script>\
 ''')
 
+
+  #----------------------------------------------------------------------------
+  def test_script_wrapper(self):
+    import jstc
+    with fso.push() as overlay:
+      self.writecontent({
+        'test/hello.hbs': 'hello, world!',
+        'test/hello/name.hbs': 'hello, {{name}}!',
+      })
+      compiled = jstc.render_assets(
+        'jstc:test/**.hbs', force_inline=True, force_precompile=True,
+        script_wrapper = lambda script, *args, **kw: '<SCRIPT>' + script + '</SCRIPT>')
+      if 'text/x-handlebars' in compiled:
+        raise unittest.SkipTest(
+          'handlebars executable not available (use "npm install handlebars")')
+      self.assertMultiLineEqual(
+        compiled,
+        '''\
+<SCRIPT>(function(){var t=Handlebars.template,ts=Handlebars.templates=Handlebars.templates||{};ts["hello"]=t({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    return "hello, world!";
+},"useData":true});ts["hello/name"]=t({"compiler":[7,">= 4.0.0"],"main":function(container,depth0,helpers,partials,data) {
+    var helper;
+
+  return "hello, "
+    + container.escapeExpression(((helper = (helper = helpers.name || (depth0 != null ? depth0.name : depth0)) != null ? helper : helpers.helperMissing),(typeof helper === "function" ? helper.call(depth0 != null ? depth0 : {},{"name":"name","hash":{},"data":data}) : helper)))
+    + "!";
+},"useData":true});})();</SCRIPT>''')
 
 #------------------------------------------------------------------------------
 # end of $Id$
