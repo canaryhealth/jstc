@@ -5,7 +5,7 @@ JavaScript Template Compiler
 The `jstc` Python package compiles and packages JavaScript templates
 for delivery to browsers for client-side evaluation.
 
-Currently, only `handlebars`_ and `mustache`_ template formats are
+Currently, only `Handlebars`_ and `Mustache`_ template formats are
 supported natively, however this is easily extended via jstc's plugin
 mechanism.
 
@@ -45,7 +45,8 @@ your HTML generation template (here, using `Mako`_ syntax):
 
   <%! import jstc %>
   <div id="Templates" style="display:none">
-    ${jstc.render_assets('myapp:static/scripts/**.hbs', inline=True, precompile=False)|n}
+    ${jstc.render_assets(
+      'myapp:static/scripts/**.hbs', force_inline=True, force_precompile=False)|n}
   </div>
 
 
@@ -76,9 +77,9 @@ output simplicity):
 .. code:: python
 
   import jstc
-  jstc.render(
+  jstc.render_assets(
     'myapp:static/templates/common/**.hbs', 'static/templates',
-    inline=True, precompile=False)
+    force_inline=True, force_precompile=False)
 
 
 Outputs the HTML (whitespace and newlines added for clarity):
@@ -154,6 +155,6 @@ look at the `handlebars implementation
 <https://github.com/canaryhealth/jstc/blob/master/jstc/engines/handlebars.py>`_.
 
 
-.. _handlebars: http://handlebarsjs.com/
-.. _mustache: http://mustache.github.io/
+.. _Handlebars: http://handlebarsjs.com/
+.. _Mustache: http://mustache.github.io/
 .. _Mako: http://www.makotemplates.org/
