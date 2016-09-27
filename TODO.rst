@@ -3,6 +3,11 @@ TODO's
 ======
 
 
+* if `precompile` is true, but a PrecompilerUnavailable error is
+  returned, jstc silently goes into precompile=false mode... perhaps
+  there should be a way to override that so that it throws an
+  exception?
+
 * If a template type is not registered in Compiler.mimetypes:
   * warn via log.warn()
   * force 'precompile' to false
