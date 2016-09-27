@@ -54,6 +54,7 @@ class HandlebarsEngine(base.Engine):
 
   #----------------------------------------------------------------------------
   def execute(self, args, input=None):
+    # todo: move this into an ``ExternalPipeEngine`` helper superclass...
     try:
       if input:
         # todo: implement
