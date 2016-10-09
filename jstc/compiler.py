@@ -614,6 +614,18 @@ class Compiler(object):
         filter templates in `template_filter` and/or specially process
         the resulting templates.
 
+      protected : bool, default: false
+
+        Specifies whether or not this template should only be served
+        to authenticated and authorized clients. Typically, these are
+        not inlined into the base HTML page and are delivered
+        asynchronously after authentication.
+
+        NOTE: this attribute is NOT used by the `jstc` package...
+        this is an attribute that is intended to be used by callers to
+        filter templates in `template_filter` and/or specially process
+        the resulting templates.
+
       partial : bool, default: false
 
         Specifies whether or not the return value can be in
