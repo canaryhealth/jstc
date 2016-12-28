@@ -99,6 +99,124 @@ Outputs the HTML (whitespace and newlines added for clarity):
   </script>
 
 
+Template Attributes
+===================
+
+When multiple templates are defined in a file, each template can
+specify, or override, a set of attributes after the template name. For
+example:
+
+.. code:: text
+
+  ##! template1
+
+    <span>The first template.</span>
+
+  ##! template2; precompile; !inline; space: preserve
+
+    <span>The second template.</span>
+
+The above file creates two templates, one named "template1" with no
+attribute overrides, and a second one named "template2" with three
+attributes: "precompile" set to true, "inline" set to false, and
+"space" set to "preserve".
+
+The following attributes control how `jstc` processes each template
+(all other attributes are passed through either to callbacks or to the
+output):
+
+* ``type``:
+
+  The template engine type, normally extracted from the mime-type of
+  the file (i.e. the filename's extension), can be overridden thus
+  allowing multiple template types within a single file.
+
+* ``space``:
+
+  Controls whitespace handing in template content. The following
+  values are supported:
+
+  * ``preserve``:
+
+    Leave all whitespace exactly as-is.
+
+  * ``trim``:
+
+    Remove leading and trailing whitespace.
+
+  * ``dedent``:
+
+    "Dedent" the template (i.e. remove all whitespace that prefixes
+    every line in the template) and also apply the ``trim``
+    transformation.
+
+  * ``collapse`` (the default):
+
+    This applies the ``dedent`` transformation and then removes
+    "ignorable" whitespace. Note that what is considered "ignorable"
+    is dependent on the ``type``, but all assume that HTML is the
+    target output. For example, for a `Handlebars`_ template, the
+    following content:
+
+    .. code::
+
+      {{#if value}}
+        <b>
+          {{value}}
+        </b>
+      {{else}}
+        <i>default</i>
+      {{/if}}
+
+    will be collapsed to:
+
+      {{#if value}}<b>{{value}}</b>{{else}}<i>default</i>{{/if}}
+
+* ``precompile``:
+
+  Flag to control server-side pre-compilation.
+
+* ``collision``:
+
+  See help(jstc.Compiler.compile).
+
+  TODO: dynamically duplicate pydoc here.
+
+* ``inline``:
+
+  See help(jstc.Compiler.compile).
+
+  TODO: dynamically duplicate pydoc here.
+
+* ``protected``:
+
+  See help(jstc.Compiler.compile).
+
+  TODO: dynamically duplicate pydoc here.
+
+* ``partial``:
+
+  See help(jstc.Compiler.compile).
+
+  TODO: dynamically duplicate pydoc here.
+
+* ``pass-through``:
+
+  See help(jstc.Compiler.compile).
+
+  TODO: dynamically duplicate pydoc here.
+
+* ``prefix-through``:
+
+  See help(jstc.Compiler.compile).
+
+  TODO: dynamically duplicate pydoc here.
+
+* ``trim``:
+
+  DEPRECATED; use ``space`` instead.
+
+
 Some Assumptions
 ================
 
