@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.1.5
+======
+
+* Added template attribute ``space`` with support to collapse
+  "ignorable" whitespace
+* Deprecated template attribute ``trim`` in favor of ``space``
+
+
 v0.1.4
 ======
 
