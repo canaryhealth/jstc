@@ -6,15 +6,36 @@
 # copy: (C) Copyright 2016-EOT Canary Health, Inc., All Rights Reserved.
 #------------------------------------------------------------------------------
 
+import re
+
 #------------------------------------------------------------------------------
 class Engine(object):
 
   mimetype              = None
   extensions            = None
+  open_markers          = ('<',)
+  close_markers         = ('>',)
 
   #----------------------------------------------------------------------------
   def __init__(self, *args, **kw):
     super(Engine, self).__init__(*args, **kw)
+    self._ws_cre = re.compile(
+      '(?P<close>' + '|'.join([re.escape(m) for m in self.close_markers]) + ')'
+      + '\\s*\n\\s*'
+      + '(?P<open>' + '|'.join([re.escape(m) for m in self.open_markers]) + ')',
+      flags = re.DOTALL)
+
+  #----------------------------------------------------------------------------
+  def whitespace(self, text, attrs):
+    '''
+    Remove "ignorable" whitespace from `text`. Note that `text` will
+    already have been dedented and stripped.
+    '''
+    # todo: ok, this is a *SUPER* simple ignorable whitespace
+    #       detection algorithm... this needs to be refactored
+    #       somehow...
+    #return text
+    return self._ws_cre.sub('\\g<close>\\g<open>', text)
 
   #----------------------------------------------------------------------------
   def precompile(self, text, attrs):
