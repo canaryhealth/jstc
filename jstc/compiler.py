@@ -106,6 +106,11 @@ class Compiler(object):
   COLLISION_IGNORE      = 'ignore'
   COLLISION_OVERRIDE    = 'override'
 
+  SPACE_PRESERVE        = 'preserve'
+  SPACE_TRIM            = 'trim'
+  SPACE_DEDENT          = 'dedent'
+  SPACE_COLLAPSE        = 'collapse'
+
   ROOT_AUTO             = 'auto'
 
   TYPE_HTMLFRAG         = 'text/html-fragment'
@@ -118,7 +123,7 @@ class Compiler(object):
   scriptfmt             = six.u('<script type="{type}" {attributes}>{script}</script>')
 
   default_defaults      = {
-                            'trim'            : True,
+                            'space'           : SPACE_COLLAPSE,
                             'inline'          : False,
                             'precompile'      : True,
                             'collision'       : COLLISION_ERROR,
@@ -550,8 +555,7 @@ class Compiler(object):
 
   #----------------------------------------------------------------------------
   def compile(self, text, attrs=None):
-    '''
-    Compiles and prepares the template `text` for delivery to remote
+    '''Compiles and prepares the template `text` for delivery to remote
     JavaScript template processing routines.
 
     :Parameters:
@@ -597,10 +601,46 @@ class Compiler(object):
         pre-compiled template can actually be a *much* larger payload
         (in some cases 4x!) -- your mileage may vary!
 
-      trim : bool, default: true
+      space : { 'preserve' | 'trim' | 'dedent' | 'collapse' }, default: 'collapse'
 
-        Specifies whether or not the template content should be
-        dedented and trimmed of whitespace.
+        Controls whitespace handing in template content. The following
+        values are supported:
+
+        * ``preserve``:
+
+          Leave all whitespace exactly as-is.
+
+        * ``trim``:
+
+          Remove leading and trailing whitespace.
+
+        * ``dedent``:
+
+          "Dedent" the template (i.e. remove all whitespace that prefixes
+          every line in the template) and also apply the ``trim``
+          transformation.
+
+        * ``collapse`` (the default):
+
+          This applies the ``dedent`` transformation and then removes
+          "ignorable" whitespace. Note that what is considered "ignorable"
+          is dependent on the ``type``, but all assume that HTML is the
+          target output. For example, for a `Handlebars`_ template, the
+          following content:
+
+          .. code::
+
+            {{#if value}}
+              <b>
+                {{value}}
+              </b>
+            {{else}}
+              <i>default</i>
+            {{/if}}
+
+          will be collapsed to:
+
+            {{#if value}}<b>{{value}}</b>{{else}}<i>default</i>{{/if}}
 
       inline : bool, default: false
 
@@ -657,6 +697,10 @@ class Compiler(object):
 
         Note that this only applies to non-pre-compiled templates.
 
+      trim : bool, default: null
+
+        DEPRECATED; use `space`.
+
     :Returns:
 
     list
@@ -689,11 +733,33 @@ class Compiler(object):
     return self._compile(text, attrs)
 
   #----------------------------------------------------------------------------
+  def whitespace(self, text, attrs):
+    xform = attrs.space
+    if xform == self.SPACE_PRESERVE:
+      return text
+    if xform in (self.SPACE_COLLAPSE, self.SPACE_DEDENT):
+      text = textwrap.dedent(text)
+    if xform in (self.SPACE_COLLAPSE, self.SPACE_DEDENT, self.SPACE_TRIM):
+      text = text.strip()
+    if xform in (self.SPACE_COLLAPSE,):
+      precomp = self.precompilers.get(attrs.type)
+      if not precomp:
+        # todo: is this the right way to default the whitespace
+        #       collapsing engine?
+        from .engines.base import Engine
+        precomp = Engine()
+      text = precomp.whitespace(text, attrs)
+    return text
+
+
+  #----------------------------------------------------------------------------
   def _compile(self, text, attrs):
-    if morph.tobool(attrs.trim):
-      text = textwrap.dedent(text).strip()
     # todo: should `attrs` be able to specify an alternate commenting scheme?...
     text = self.decomment(text)
+    xform = attrs.space
+    if attrs.trim is False:
+      xform = self.SPACE_PRESERVE
+    text = self.whitespace(text, aadict(attrs, space=xform))
     if not morph.tobool(attrs.precompile):
       # return (text, False, attrs)
       return self._htmlwrap(text, attrs)
