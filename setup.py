@@ -22,6 +22,7 @@ def read(*parts, **kw):
 test_dependencies = [
   'nose                 >= 1.3.0',
   'coverage             >= 3.5.3',
+  'fso                  >= 0.3.1',
 ]
 
 dependencies = [
