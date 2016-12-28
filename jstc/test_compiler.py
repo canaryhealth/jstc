@@ -91,6 +91,124 @@ class TestCompiler(unittest.TestCase):
 ''')
 
   #----------------------------------------------------------------------------
+  def test_render_trim_deprecated(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! 0-default
+              <span>
+                text
+              </span>
+            ##! 1-trim; trim
+              <span>
+                text
+              </span>
+            ##! 2-notrim; !trim
+              <span>
+                text
+              </span>
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/0-default"><span>
+  text
+</span></script>\
+<script type="text/x-handlebars" data-template-name="test/1-trim"><span>
+  text
+</span></script>\
+<script type="text/x-handlebars" data-template-name="test/2-notrim">  <span>
+    text
+  </span>
+</script>\
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! 0-default
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+            ##! 1-preserve; space: preserve
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+            ##! 2-trim; space: trim
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+            ##! 3-dedent; space: dedent
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+            ##! 4-collapse; space: collapse
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/0-default">{{#if value}}<span>{{value}}</span>{{else}}<span>default</span>{{/if}}</script>\
+<script type="text/x-handlebars" data-template-name="test/1-preserve">  {{#if value}}
+    <span>
+      {{value}}
+    </span>
+  {{else}}
+    <span>default</span>
+  {{/if}}
+</script>\
+<script type="text/x-handlebars" data-template-name="test/2-trim">{{#if value}}
+    <span>
+      {{value}}
+    </span>
+  {{else}}
+    <span>default</span>
+  {{/if}}</script>\
+<script type="text/x-handlebars" data-template-name="test/3-dedent">{{#if value}}
+  <span>
+    {{value}}
+  </span>
+{{else}}
+  <span>default</span>
+{{/if}}</script>\
+<script type="text/x-handlebars" data-template-name="test/4-collapse">{{#if value}}<span>{{value}}</span>{{else}}<span>default</span>{{/if}}</script>\
+''')
+
+  #----------------------------------------------------------------------------
   def test_comments(self):
     import jstc.compiler
     compiler = jstc.compiler.Compiler(
