@@ -17,6 +17,8 @@ class MustacheEngine(base.Engine):
 
   mimetype              = 'text/x-mustache'
   extensions            = ('.mustache',)
+  open_markers          = base.Engine.open_markers + ('{{',)
+  close_markers         = base.Engine.close_markers + ('}}',)
   precompile            = api.PrecompilerUnavailable
 
 
