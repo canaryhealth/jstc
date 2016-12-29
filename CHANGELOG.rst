@@ -3,6 +3,14 @@ ChangeLog
 =========
 
 
+v0.1.6
+======
+
+* Reverted the default value for ``space`` to "dedent" to avoid the
+  overly aggressive whitespace collapsing (this needs to be rectified
+  before re-enabling "collapse" as the default)
+
+
 v0.1.5
 ======
 
