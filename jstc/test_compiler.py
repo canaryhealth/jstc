@@ -129,7 +129,7 @@ class TestCompiler(unittest.TestCase):
 ''')
 
   #----------------------------------------------------------------------------
-  def test_render_space(self):
+  def test_render_space_default(self):
     import jstc.compiler
     compiler = jstc.compiler.Compiler(
       overrides=dict(inline=True, precompile=False))
@@ -137,39 +137,7 @@ class TestCompiler(unittest.TestCase):
       self.writecontent({
         'test.hbs':
           '''\
-            ##! 0-default
-              {{#if value}}
-                <span>
-                  {{value}}
-                </span>
-              {{else}}
-                <span>default</span>
-              {{/if}}
-            ##! 1-preserve; space: preserve
-              {{#if value}}
-                <span>
-                  {{value}}
-                </span>
-              {{else}}
-                <span>default</span>
-              {{/if}}
-            ##! 2-trim; space: trim
-              {{#if value}}
-                <span>
-                  {{value}}
-                </span>
-              {{else}}
-                <span>default</span>
-              {{/if}}
-            ##! 3-dedent; space: dedent
-              {{#if value}}
-                <span>
-                  {{value}}
-                </span>
-              {{else}}
-                <span>default</span>
-              {{/if}}
-            ##! 4-collapse; space: collapse
+            ##! default
               {{#if value}}
                 <span>
                   {{value}}
@@ -182,14 +150,38 @@ class TestCompiler(unittest.TestCase):
       self.assertEqual(
         compiler.render_assets('jstc:test.hbs'),
         '''\
-<script type="text/x-handlebars" data-template-name="test/0-default">{{#if value}}
+<script type="text/x-handlebars" data-template-name="test/default">{{#if value}}
   <span>
     {{value}}
   </span>
 {{else}}
   <span>default</span>
 {{/if}}</script>\
-<script type="text/x-handlebars" data-template-name="test/1-preserve">  {{#if value}}
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space_preserve(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! preserve; space: preserve
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/preserve">  {{#if value}}
     <span>
       {{value}}
     </span>
@@ -197,21 +189,143 @@ class TestCompiler(unittest.TestCase):
     <span>default</span>
   {{/if}}
 </script>\
-<script type="text/x-handlebars" data-template-name="test/2-trim">{{#if value}}
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space_trim(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! trim; space: trim
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/trim">{{#if value}}
     <span>
       {{value}}
     </span>
   {{else}}
     <span>default</span>
   {{/if}}</script>\
-<script type="text/x-handlebars" data-template-name="test/3-dedent">{{#if value}}
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space_dedent(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! dedent; space: dedent
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/dedent">{{#if value}}
   <span>
     {{value}}
   </span>
 {{else}}
   <span>default</span>
 {{/if}}</script>\
-<script type="text/x-handlebars" data-template-name="test/4-collapse">{{#if value}}<span>{{value}}</span>{{else}}<span>default</span>{{/if}}</script>\
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space_collapse_complete(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! collapse/complete; space: collapse
+              {{#if value}}
+                <span>
+                  {{value}}
+                </span>
+              {{else}}
+                <span>default</span>
+              {{/if}}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/collapse/complete">{{#if value}}<span>{{value}}</span>{{else}}<span>default</span>{{/if}}</script>\
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space_collapse_htmlSpace(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! collapse/htmlspace; space: collapse
+              {{#if value}}
+                <span >
+                  {{value}}
+                </span >
+              {{else}}
+                <span>default</span >
+              {{/if}}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/collapse/htmlspace">{{#if value}}<span> {{value}}</span> {{else}}<span>default</span> {{/if}}</script>\
+''')
+
+  #----------------------------------------------------------------------------
+  def test_render_space_collapse_hbsSpace(self):
+    import jstc.compiler
+    compiler = jstc.compiler.Compiler(
+      overrides=dict(inline=True, precompile=False))
+    with fso.push() as overlay:
+      self.writecontent({
+        'test.hbs':
+          '''\
+            ##! collapse/hbsspace; space: collapse
+              {{#if value }}
+                <span>
+                  {{value }}
+                </span>
+              {{else }}
+                <span>default</span>
+              {{/if }}
+          '''
+      })
+      self.assertEqual(
+        compiler.render_assets('jstc:test.hbs'),
+        '''\
+<script type="text/x-handlebars" data-template-name="test/collapse/hbsspace">{{#if value}} <span>{{value}} </span>{{else}} <span>default</span>{{/if}} </script>\
 ''')
 
   #----------------------------------------------------------------------------
