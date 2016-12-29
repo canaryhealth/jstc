@@ -182,7 +182,13 @@ class TestCompiler(unittest.TestCase):
       self.assertEqual(
         compiler.render_assets('jstc:test.hbs'),
         '''\
-<script type="text/x-handlebars" data-template-name="test/0-default">{{#if value}}<span>{{value}}</span>{{else}}<span>default</span>{{/if}}</script>\
+<script type="text/x-handlebars" data-template-name="test/0-default">{{#if value}}
+  <span>
+    {{value}}
+  </span>
+{{else}}
+  <span>default</span>
+{{/if}}</script>\
 <script type="text/x-handlebars" data-template-name="test/1-preserve">  {{#if value}}
     <span>
       {{value}}
