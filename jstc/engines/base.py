@@ -14,16 +14,25 @@ class Engine(object):
   mimetype              = None
   extensions            = None
   open_markers          = ('<',)
-  close_markers         = ('>',)
+  close_markers         = ('/>', '>')
 
   #----------------------------------------------------------------------------
   def __init__(self, *args, **kw):
     super(Engine, self).__init__(*args, **kw)
-    self._ws_cre = re.compile(
-      '(?P<close>' + '|'.join([re.escape(m) for m in self.close_markers]) + ')'
-      + '\\s*\n\\s*'
-      + '(?P<open>' + '|'.join([re.escape(m) for m in self.open_markers]) + ')',
+    self._ws_cre = self.whitespace_cre()
+
+  #----------------------------------------------------------------------------
+  def whitespace_cre(self):
+    return re.compile(
+      '(?P<space>^|\\s)?(?P<close>' + '|'.join([re.escape(m) for m in self.close_markers]) + ')'
+      + '(\\s*\n\\s*'
+      + '(?P<open>' + '|'.join([re.escape(m) for m in self.open_markers]) + ')|$)',
       flags = re.DOTALL)
+
+  #----------------------------------------------------------------------------
+  def whitespace_sub(self, match):
+    space = match.group('space')
+    return match.group('close') + (space or '') + (match.group('open') or '')
 
   #----------------------------------------------------------------------------
   def whitespace(self, text, attrs):
@@ -34,8 +43,7 @@ class Engine(object):
     # todo: ok, this is a *SUPER* simple ignorable whitespace
     #       detection algorithm... this needs to be refactored
     #       somehow...
-    #return text
-    return self._ws_cre.sub('\\g<close>\\g<open>', text)
+    return self._ws_cre.sub(self.whitespace_sub, text)
 
   #----------------------------------------------------------------------------
   def precompile(self, text, attrs):
