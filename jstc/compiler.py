@@ -123,7 +123,7 @@ class Compiler(object):
   scriptfmt             = six.u('<script type="{type}" {attributes}>{script}</script>')
 
   default_defaults      = {
-                            'space'           : SPACE_COLLAPSE,
+                            'space'           : SPACE_DEDENT,
                             'inline'          : False,
                             'precompile'      : True,
                             'collision'       : COLLISION_ERROR,
