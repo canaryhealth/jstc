@@ -283,15 +283,22 @@ Create module ``myapp/easytpl.py``:
   import jstc
   import asset
 
+  # declare that this is a "jstc.engines.plugins" plugin of type "text/x-easytpl"
   @asset.plugin('jstc.engines.plugins', 'text/x-easytpl')
   class EasyTemplateEngine(jstc.engines.base.Engine):
-    mimetype    = 'text/x-handlebars'
+
+    # declare the official mime-type of this engine
+    mimetype    = 'text/x-easytpl'
+
+    # and extensions that should map to this mime-type
     extensions  = ('.et',)
+
+    # and that this engine does not support precompilation
     precompile  = jstc.PrecompilerUnavailable
 
 
-And then in your myapp's ``setup.py``, add the following parameter
-to your `setup` call:
+And then in your myapp's ``setup.py``, add the following parameter to
+your `setup` call (to make it available in the plugin entrypoints):
 
 .. code:: python
 
@@ -308,8 +315,9 @@ to your `setup` call:
 Et voilà, soufflé!
 
 If you also want to support pre-compilation (i.e. server-side template
-tokenization for faster client-side runtime evaluation), then take a
-look at the `handlebars implementation
+tokenization for faster client-side runtime evaluation), more
+collapsable whitespace tokens, and other features, then take a look at
+the `handlebars implementation
 <https://github.com/canaryhealth/jstc/blob/master/jstc/engines/handlebars.py>`_.
 
 
@@ -322,7 +330,7 @@ elements in HTML
 you'll discover that this has long been an issue... `jstc` can help "a
 bit" when you enable "space=collapse" mode.
 
-When enabled, the following template:
+When collapsing of whitespace is enabled, the following template:
 
 .. code::
 
@@ -341,9 +349,9 @@ will be collapsed to:
   {{#if flag}}<div><img src="foo.png"/>{{value}}</div>{{/if}}
 
 
-which is **great**! Except when it isn't... For example, in the following, you
-*want* the spaces between the "<span>" elements to persist. To do that, add a
-space before the closing ">":
+which is **great**! Except when it it's not... For example, in the
+following, you *want* the spaces between the "<span>" elements to
+persist. To do that, add a space before the closing ">":
 
 .. code::
 
@@ -360,7 +368,8 @@ and that will be collapsed to:
   <div><span>Joe</span> <span>Schmoe</span></div>
 
 
-Sorry. I know, ugly. But it works and I couldn't come up with anything else.
+Sorry. Ugly. I know. But it works and I couldn't come up with anything
+else.
 
 
 .. _Handlebars: http://handlebarsjs.com/
