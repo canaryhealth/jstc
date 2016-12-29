@@ -96,7 +96,7 @@ output simplicity):
     force_inline=True, force_precompile=False)
 
 
-Outputs the HTML (whitespace and newlines added for clarity):
+Outputs the following HTML (whitespace and newlines added for clarity):
 
 .. code:: html
 
