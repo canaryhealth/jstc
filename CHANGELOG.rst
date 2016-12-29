@@ -3,6 +3,13 @@ ChangeLog
 =========
 
 
+v0.1.7
+======
+
+* Enabled whitespace "collapse" mode to be controlled on a
+  per-instance basis so as to *keep* whitespace when desired
+
+
 v0.1.6
 ======
 
